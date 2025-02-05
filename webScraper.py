@@ -1,11 +1,10 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.firefox.options import Options
-from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 
 # URL to monitor
 url = "https://www.bhphotovideo.com/c/product/1875466-REG/msi_g5090_32sls_geforce_rtx_5090_suprim.html"
@@ -14,30 +13,32 @@ url = "https://www.bhphotovideo.com/c/product/1875466-REG/msi_g5090_32sls_geforc
 def check_stock_selenium():
     try:
         print("Initializing WebDriver...")
-        options = Options()
-        options.add_argument("--headless")  # Run headless browser (no GUI)
-        options.add_argument("--disable-gpu")  # Disable GPU acceleration (important for headless)
-        options.add_argument("--no-sandbox")  # Disable sandboxing for headless mode
+        options = webdriver.ChromeOptions()
+        # Removed headless mode for debugging
+        # options.add_argument("--headless")  # Run headless browser (no GURI)
+        options.add_argument("--no-sandbox")  # Disable sandboxing
 
-        # Set up Firefox WebDriver
-        service = FirefoxService(GeckoDriverManager().install())
-        driver = webdriver.Firefox(service=service, options=options)
+        # Set up Selenium WebDriver
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
 
         # Set a longer page load timeout to ensure full page loads
-        driver.set_page_load_timeout(40)  # Set timeout to 40 seconds
+        driver.set_page_load_timeout(30)  # Set timeout to 30 seconds
 
         print(f"Navigating to {url}...")
         driver.get(url)
 
-        # Wait for the page to load (use explicit wait)
-        wait = WebDriverWait(driver, 30)  # Increase wait time
+        # Wait for the page to load (sleep for a few seconds to make sure)
+        time.sleep(5)  # Give the page some time to load
 
+        # Wait for the element to be present (timeout after 10 seconds)
+        wait = WebDriverWait(driver, 10)
         stock_xpath = '//*[@id="bh-app"]/section/div/div[2]/div[5]/div/div[2]/div/div/div[2]/div[2]/div/div/span'
 
         print("Waiting for stock element...")
+        # Wait for the stock element to appear
         try:
-            # Wait for the stock element to appear with explicit wait
-            stock_element = wait.until(EC.visibility_of_element_located((By.XPATH, stock_xpath)))
+            stock_element = wait.until(EC.presence_of_element_located((By.XPATH, stock_xpath)))
             print("Stock element found, checking status...")
             stock_text = stock_element.text.strip()
 
